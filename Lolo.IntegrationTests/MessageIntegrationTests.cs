@@ -1,6 +1,4 @@
 ﻿using FluentAssertions;
-using Microsoft.AspNetCore.Http.Connections.Client;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using System;
@@ -16,14 +14,11 @@ public class MessageIntegrationTests(CustomWebApplicationFactory<API.Program> fa
 	public async Task SendMessage_ClientReceivesIt()
 	{
 		// Arrange
-		var client = factory.CreateClient(new WebApplicationFactoryClientOptions
-		{
-			BaseAddress = new Uri("https://localhost:7269")
-		});
-
+		var client = factory.CreateClient();
+		var signalrUri = new Uri(client.BaseAddress!, "messageHub");
 		var connection = new HubConnectionBuilder()
-			.WithUrl("https://localhost:7269/messageHub", httpConnectionOptions =>
-				httpConnectionOptions.HttpMessageHandlerFactory = _ => factory.Server.CreateHandler())
+			.WithUrl(signalrUri, options =>
+				options.HttpMessageHandlerFactory = _ => factory.Server.CreateHandler()) // <-- this is very important!
 			.ConfigureLogging(logging =>
 			{
 				logging.AddConsole();
@@ -31,7 +26,7 @@ public class MessageIntegrationTests(CustomWebApplicationFactory<API.Program> fa
 			})
 			.Build();
 
-		string receivedMessage = null;
+		string? receivedMessage = null;
 		connection.On<string>("ReceiveMessage", message =>
 		{
 			receivedMessage = message;
@@ -40,7 +35,8 @@ public class MessageIntegrationTests(CustomWebApplicationFactory<API.Program> fa
 		await connection.StartAsync();
 
 		// Act
-		var message = new { Text = "Integration Test Message" };
+		var messageText = $"Integration Test Message {Guid.NewGuid()}";
+		var message = new { Text = messageText };
 		var response = await client.PostAsJsonAsync("/api/messages", message);
 
 		// Assert
@@ -49,7 +45,7 @@ public class MessageIntegrationTests(CustomWebApplicationFactory<API.Program> fa
 		// Wait a moment for the message to be received
 		await Task.Delay(1000);
 
-		receivedMessage.Should().Be("Integration Test Message");
+		receivedMessage.Should().Be(messageText);
 
 		// Cleanup
 		await connection.StopAsync();

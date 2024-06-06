@@ -26,7 +26,6 @@ public class Program
 		app.MapControllers();
 		app.MapHub<MessageHub>("/messageHub");
 
-		app.Run("https://localhost:7269");
-		//app.Run();
+		app.Run();
 	}
 }
