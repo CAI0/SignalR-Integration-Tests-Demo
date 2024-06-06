@@ -1,8 +1,3 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-
 namespace Lolo.API;
 
 public class Program
@@ -32,5 +27,6 @@ public class Program
 		app.MapHub<MessageHub>("/messageHub");
 
 		app.Run("https://localhost:7269");
+		//app.Run();
 	}
 }
