@@ -1,0 +1,6 @@
+@Lolo.API_HostAddress = http://localhost:5072
+
+GET {{Lolo.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
